@@ -8,7 +8,8 @@ Piccolo script per analizzare un log .ADIF  ed estrarre gli elementi utili alla 
 
 4- eseguire con:
   python maratona.py [nome del log]
-
+sotto Windows potrebbe funzionare con
+ py maratona.py [nome del log]
 5- il software stampa a schermo i risultati: se volete salvarli in un file è sufficiente redirigere l'output:
   python maratona.py [nome del log] > [nome del file]
 
