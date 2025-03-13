@@ -1,7 +1,7 @@
 #
 #	Analizzatore Log per Maratona DX ARI Roma 2025
 #	IZ0MJE Stefano - pubblico dominio
-# 	nessuna garania sull'accuratezza dei risultati
+# 	nessuna garanzia sull'accuratezza dei risultati
 #
 # una lista conterrà i QSO qualificanti, che vengono aggiunti soltanto se utili
 # il QSO è qualificante se "new one" per le categorie che assegnano punteggio
@@ -11,10 +11,12 @@
 # elementi necessari: country, zona, modo, nominativo, timestamp
 # v 0.1 11 Mar 2025 - release iniziale
 # v 0.2 12 Mar 2025 - aggiunto supporto per log che non inserisca il nome del country ma solo numero DXCC
+# v 0.3 13 Mar 2025 - aggiunto supporto per log generati da QLog e avviso su assenza zone
 
 
 import sys
 
+logfile = ''
 qualificanti = []
 countries = {}
 zones = {}
@@ -427,6 +429,27 @@ dxcc = {
 	522:'REPUBLIC OF KOSOVO'
 }
 
+def conv_qlog(nomefile):
+	fileout = nomefile.removesuffix('.adi') + "-conv.adi"
+	print(fileout)
+	outfile = open(fileout, 'w')
+	riga = ''
+	with open(nomefile, 'r') as file:
+		for line in file:
+			line = line.strip()
+			riga = riga + line.upper()
+			if line == '<EOH>':
+				riga = ''
+			if line == '<eor>':
+				riga = riga + '\r\n'
+				outfile.write(riga)
+				riga = ''
+	outfile.close()
+	file.close()
+	return(fileout)
+
+
+
 def campo(nome,riga): 
 	field_start = riga.find(nome)
 	if field_start == -1:
@@ -439,69 +462,87 @@ def campo(nome,riga):
 
 print("========== QSO conteggiati ==========")
 
-with open(sys.argv[1]) as file:
-	for line in file:
+logoriginale = sys.argv[1]
+
+def checkapp(nomefile):
+	logfile = ''
+	with open(logoriginale) as origfile:
+		for line in origfile:
+			logapp = campo('PROGRAMID:',line)
+			if logapp == 'QLog':
+				logfile = conv_qlog(logoriginale)
+				break
+			else:
+				logfile = logoriginale
+	origfile.close()
+	return(logfile)
+
+logfile = checkapp(logoriginale)
+
+with open(logfile) as file:
+	for line in file:			
 		havectry = 0 # controllo se abbiamo un country valido
 		subline = line.split('<EOR>')
 		for entry in subline:
 			if len(entry) > 72:
 				nominativo = campo('<CALL:',entry)
-			country = campo('<COUNTRY:',entry)
-			if country == 'n/a':
-				dxccnr = campo('<DXCC:',entry)
-				if dxccnr == 'n/a':
-					break
+				country = campo('<COUNTRY:',entry)
+				if country == 'n/a':
+					dxccnr = campo('<DXCC:',entry)
+					if dxccnr == 'n/a':
+						break
+					else:
+						country = dxcc[int(dxccnr)]
+						havectry = 1
 				else:
-					country = dxcc[int(dxccnr)]
 					havectry = 1
-			else:
-				havectry = 1
 			
-			if havectry == 0:
-				break
+				if havectry == 0:
+					break
 				
-			print(country)
-			modo = campo('<MODE:',entry)
-			if modo in digitali:
-				modo = "digi"
-			if (modo == "SSB") or (modo == "CW"):
-				modo = "SSB/CW"
-			banda = campo('<BAND:',entry)
+				modo = campo('<MODE:',entry)
+				if modo in digitali:
+					modo = "digi"
+				if (modo == "SSB") or (modo == "CW"):
+					modo = "SSB/CW"
+				banda = campo('<BAND:',entry)
 			
-			data = campo('<QSO_DATE:',entry)
-			ora = campo('<TIME_ON:',entry)
-			zonacq = campo('<CQZ:',entry)
+				data = campo('<QSO_DATE:',entry)
+				ora = campo('<TIME_ON:',entry)
+				zonacq = campo('<CQZ:',entry)
+				if zonacq == 'n/a':
+					print("==== il record non contiene zona CQ ===")
 			
-			if nominativo == "IQ0RM":
-				country = "ARI Roma"
-				qso = nominativo + "," + country + "," + modo + "," + banda + "," + data + "," + ora + "," + zonacq +  ",3"
-			else:
-				qso = nominativo + "," + country + "," + modo + "," + banda + "," + data + "," + ora + "," + zonacq +  ",1"
+				if nominativo == "IQ0RM":
+					country = "ARI Roma"
+					qso = nominativo + "," + country + "," + modo + "," + banda + "," + data + "," + ora + "," + zonacq +  ",3"
+				else:
+					qso = nominativo + "," + country + "," + modo + "," + banda + "," + data + "," + ora + "," + zonacq +  ",1"
 
 
-			# se il country non è ancora nella matrice
-			if country not in countries:
-				#	lo aggiungiamo alla lista dei qualificanti
-				qualificanti.append(qso)
-				qsoindex = len(qualificanti)
-				#	lo aggiungiamo alla lista countries
-				countries[country] = qsoindex
-				print(qsoindex, end="")
-				print(" - ", end="")
-				print(qso, end="")
-				print(" -- nuovo country")
+				# se il country non è ancora nella matrice
+				if country not in countries:
+					#	lo aggiungiamo alla lista dei qualificanti
+					qualificanti.append(qso)
+					qsoindex = len(qualificanti)
+					#	lo aggiungiamo alla lista countries
+					countries[country] = qsoindex
+					print(qsoindex, end="")
+					print(" - ", end="")
+					print(qso, end="")
+					print(" -- nuovo country")
 
-			# altrimenti vediamo se ci serve per la zona
-			elif zonacq not in zones:
-				#	lo aggiungiamo alla lista dei qualificanti
-				qualificanti.append(qso)
-				qsoindex = len(qualificanti)
-				#	lo aggiungiamo alla lista zone
-				zones[zonacq] = qsoindex
-				print(qsoindex, end="")
-				print(" - ", end="")
-				print(qso, end="")
-				print(" -- nuova zona")
+				# altrimenti vediamo se ci serve per la zona
+				elif zonacq not in zones:
+					#	lo aggiungiamo alla lista dei qualificanti
+					qualificanti.append(qso)
+					qsoindex = len(qualificanti)
+					#	lo aggiungiamo alla lista zone
+					zones[zonacq] = qsoindex
+					print(qsoindex, end="")
+					print(" - ", end="")
+					print(qso, end="")
+					print(" -- nuova zona")
 
 print("\n\n\n========== RIEPILOGO ==========")
 
