@@ -12,7 +12,7 @@
 # v 0.1 11 Mar 2025 - release iniziale
 # v 0.2 12 Mar 2025 - aggiunto supporto per log che non inserisca il nome del country ma solo numero DXCC
 # v 0.3 13 Mar 2025 - aggiunto supporto per log generati da QLog e avviso su assenza zone
-
+# v 0.4 14 Mar 2025 - aggiunto support per log generati da BBLOGGER
 
 import sys
 
@@ -431,16 +431,16 @@ dxcc = {
 
 def conv_qlog(nomefile):
 	fileout = nomefile.removesuffix('.adi') + "-conv.adi"
-	print(fileout)
 	outfile = open(fileout, 'w')
 	riga = ''
 	with open(nomefile, 'r') as file:
 		for line in file:
 			line = line.strip()
-			riga = riga + line.upper()
+			line = line.upper()
+			riga = riga + line
 			if line == '<EOH>':
 				riga = ''
-			if line == '<eor>':
+			if line == '<EOR>':
 				riga = riga + '\r\n'
 				outfile.write(riga)
 				riga = ''
@@ -469,7 +469,7 @@ def checkapp(nomefile):
 	with open(logoriginale) as origfile:
 		for line in origfile:
 			logapp = campo('PROGRAMID:',line)
-			if logapp == 'QLog':
+			if (logapp == 'QLog') or (logapp == 'BBLOGGER'):
 				logfile = conv_qlog(logoriginale)
 				break
 			else:
