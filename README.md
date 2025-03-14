@@ -10,7 +10,7 @@ Piccolo script per analizzare un log .ADIF  ed estrarre gli elementi utili alla 
   python maratona.py [nome del log]
 sotto Windows potrebbe funzionare con
  py maratona.py [nome del log]
-5- il software stampa a schermo i risultati: se volete salvarli in un file è sufficiente redirigere l'output:
-  python maratona.py [nome del log] > [nome del file]
+5- il software stampa a schermo i risultati ed eventuali avvisi
+6- viene generato un rapportino nel file "calcolo-maratona.txt"
 
 Testato con .adi generati da QLog, BBLOGGER, QARTest (a seconda del contest non include la zona CQ)
