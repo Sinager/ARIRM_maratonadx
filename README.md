@@ -13,4 +13,4 @@ sotto Windows potrebbe funzionare con
 5- il software stampa a schermo i risultati: se volete salvarli in un file è sufficiente redirigere l'output:
   python maratona.py [nome del log] > [nome del file]
 
-  
+Testato con .adi generati da QLog, BBLOGGER, QARTest (a seconda del contest non include la zona CQ)
