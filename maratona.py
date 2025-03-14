@@ -9,10 +9,12 @@
 # country e zone sono dizionari che portano come primo elemento country o zona e come secondo elemento l'ordinale di lista del QSO
 
 # elementi necessari: country, zona, modo, nominativo, timestamp
-# v 0.1 11 Mar 2025 - release iniziale
+# v 0.5 14 Mar 2025 - aggiunta generazione rapportino in file "calcolo-maratona.txt"
+# v 0.4 14 Mar 2025 - aggiunto supporto per log generati da BBLOGGER
+# v 0.3 13 Mar 2025 - aggiunto supporto per log generati da QLog e avviso su assenza zone (QARTest)
 # v 0.2 12 Mar 2025 - aggiunto supporto per log che non inserisca il nome del country ma solo numero DXCC
-# v 0.3 13 Mar 2025 - aggiunto supporto per log generati da QLog e avviso su assenza zone
-# v 0.4 14 Mar 2025 - aggiunto support per log generati da BBLOGGER
+# v 0.1 11 Mar 2025 - release iniziale
+
 
 import sys
 
@@ -457,12 +459,12 @@ def campo(nome,riga):
 	else:
 		field_start = riga.find('>',field_start)
 		field_end = riga.find('<',field_start)
-		#return(riga[field_start +1:field_end -1:])
 		return(riga[field_start +1:field_end:])
 
 print("========== QSO conteggiati ==========")
 
 logoriginale = sys.argv[1]
+
 
 def checkapp(nomefile):
 	logfile = ''
@@ -480,6 +482,7 @@ def checkapp(nomefile):
 logfile = checkapp(logoriginale)
 
 with open(logfile) as file:
+	rendiconto = open('calcolo-maratona.txt', 'w')
 	for line in file:			
 		havectry = 0 # controllo se abbiamo un country valido
 		subline = line.split('<EOR>')
@@ -532,6 +535,12 @@ with open(logfile) as file:
 					print(qso, end="")
 					print(" -- nuovo country")
 
+					print(qsoindex, end="", file=rendiconto)
+					print(" - ", end="", file=rendiconto)
+					print(qso, end="", file=rendiconto)
+					print(" -- nuovo country", file=rendiconto)
+
+
 				# altrimenti vediamo se ci serve per la zona
 				elif zonacq not in zones:
 					#	lo aggiungiamo alla lista dei qualificanti
@@ -539,24 +548,40 @@ with open(logfile) as file:
 					qsoindex = len(qualificanti)
 					#	lo aggiungiamo alla lista zone
 					zones[zonacq] = qsoindex
+					print(qsoindex, end="", file=rendiconto)
+					print(" - ", end="", file=rendiconto)
+					print(qso, end="", file=rendiconto)
+					print(" -- nuova zona", file=rendiconto)
+
 					print(qsoindex, end="")
 					print(" - ", end="")
 					print(qso, end="")
 					print(" -- nuova zona")
 
 print("\n\n\n========== RIEPILOGO ==========")
+print("\n\n\n========== RIEPILOGO ==========", file=rendiconto)
 
 # siccome ARI Roma l'abbiamo considerata come un country, bisogna togliere 1 dal conteggio, se collegata
 print("Countries		", end="")
+print("Countries		", end="", file=rendiconto)
+
+
 if "ARI Roma" in countries:
 	punt_ctry = len(countries.keys())-1
 else:
 	punt_ctry = len(countries.keys())
 print(punt_ctry)
+print(punt_ctry, file=rendiconto)
+
 
 print("Zone			", end="")
+print("Zone			", end="", file=rendiconto)
+
+
 punt_zone = len(zones.keys())
 print(punt_zone)
+print(punt_zone, file=rendiconto)
+
 
 if "ARI Roma" in countries:
 	punt_iq0rm = 3
@@ -569,9 +594,23 @@ print("-------------------------------")
 print("Totale			", end="")
 print(punt_ctry + punt_zone + punt_iq0rm)
 
+print("IQ0RM			", end="", file=rendiconto)
+print(punt_iq0rm, file=rendiconto)
+print("-------------------------------", file=rendiconto)
+print("Totale			", end="", file=rendiconto)
+print(punt_ctry + punt_zone + punt_iq0rm, file=rendiconto)
+
+
 print("\n\n\n========== Zone non collegate ==========")
+print("\n\n\n========== Zone non collegate ==========", file=rendiconto)
+
+
 for i in range (1,40):
 	if str(i) not in zones:
 		print(i, end=" ")
+		print(i, end=" ", file=rendiconto)
 	i += 1
 print()
+print(file=rendiconto)
+
+rendiconto.close()
