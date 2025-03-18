@@ -9,6 +9,7 @@
 # country e zone sono dizionari che portano come primo elemento country o zona e come secondo elemento l'ordinale di lista del QSO
 
 # elementi necessari: country, zona, modo, nominativo, timestamp
+# v 0.6 15 Mar 2025 - corretto errore nel conteggio / elenco delle zone
 # v 0.5 14 Mar 2025 - aggiunta generazione rapportino in file "calcolo-maratona.txt"
 # v 0.4 14 Mar 2025 - aggiunto supporto per log generati da BBLOGGER
 # v 0.3 13 Mar 2025 - aggiunto supporto per log generati da QLog e avviso su assenza zone (QARTest)
@@ -542,7 +543,7 @@ with open(logfile) as file:
 
 
 				# altrimenti vediamo se ci serve per la zona
-				elif zonacq not in zones:
+				elif zonacq not in zones and zonacq != 'n/a':
 					#	lo aggiungiamo alla lista dei qualificanti
 					qualificanti.append(qso)
 					qsoindex = len(qualificanti)
@@ -577,7 +578,6 @@ print(punt_ctry, file=rendiconto)
 print("Zone			", end="")
 print("Zone			", end="", file=rendiconto)
 
-
 punt_zone = len(zones.keys())
 print(punt_zone)
 print(punt_zone, file=rendiconto)
@@ -600,12 +600,22 @@ print("-------------------------------", file=rendiconto)
 print("Totale			", end="", file=rendiconto)
 print(punt_ctry + punt_zone + punt_iq0rm, file=rendiconto)
 
+print("\n\n\n========== Zone collegate ==========")
+print("\n\n\n========== Zone collegate ==========", file=rendiconto)
+
+for i in range (1,41):
+	if str(i) in zones:
+		print(i, end=" ")
+		print(i, end=" ", file=rendiconto)
+	i += 1
+print()
+print(file=rendiconto)
 
 print("\n\n\n========== Zone non collegate ==========")
 print("\n\n\n========== Zone non collegate ==========", file=rendiconto)
 
 
-for i in range (1,40):
+for i in range (1,41):
 	if str(i) not in zones:
 		print(i, end=" ")
 		print(i, end=" ", file=rendiconto)
