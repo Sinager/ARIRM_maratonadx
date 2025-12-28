@@ -9,6 +9,7 @@
 # country e zone sono dizionari che portano come primo elemento country o zona e come secondo elemento l'ordinale di lista del QSO
 
 # elementi necessari: country, zona, modo, nominativo, timestamp
+# v 0.7 28 Dic 2025 - aggiunto supporto per log generati da QRZLogbook
 # v 0.6 15 Mar 2025 - corretto errore nel conteggio / elenco delle zone
 # v 0.5 14 Mar 2025 - aggiunta generazione rapportino in file "calcolo-maratona.txt"
 # v 0.4 14 Mar 2025 - aggiunto supporto per log generati da BBLOGGER
@@ -472,7 +473,7 @@ def checkapp(nomefile):
 	with open(logoriginale) as origfile:
 		for line in origfile:
 			logapp = campo('PROGRAMID:',line)
-			if (logapp == 'QLog') or (logapp == 'BBLOGGER'):
+			if (logapp == 'QLog') or (logapp == 'BBLOGGER') or (logapp == 'QRZLogbook'):
 				logfile = conv_qlog(logoriginale)
 				break
 			else:
