@@ -9,6 +9,7 @@
 # country e zone sono dizionari che portano come primo elemento country o zona e come secondo elemento l'ordinale di lista del QSO
 
 # elementi necessari: country, zona, modo, nominativo, timestamp
+# v 0.8 28 Dic 2025 - corretto errore conteggio zone - tnx IU0QME per la segnalazione
 # v 0.7 28 Dic 2025 - aggiunto supporto per log generati da QRZLogbook
 # v 0.6 15 Mar 2025 - corretto errore nel conteggio / elenco delle zone
 # v 0.5 14 Mar 2025 - aggiunta generazione rapportino in file "calcolo-maratona.txt"
@@ -560,8 +561,41 @@ with open(logfile) as file:
 					print(qso, end="")
 					print(" -- nuova zona")
 
+
 print("\n\n\n========== RIEPILOGO ==========")
 print("\n\n\n========== RIEPILOGO ==========", file=rendiconto)
+
+print("\n\n\n========== Zone collegate ==========")
+print("\n\n\n========== Zone collegate ==========", file=rendiconto)
+
+contazone = 0
+for i in range (1,41):
+	if str(i) in zones:
+		print(i, end=" ")
+		print(i, end=" ", file=rendiconto)
+		contazone += 1
+	i += 1
+print()
+print(file=rendiconto)
+
+print("\n========== Zone non collegate ==========")
+print("\n========== Zone non collegate ==========", file=rendiconto)
+
+for i in range (1,41):
+	if str(i) not in zones:
+		print(i, end=" ")
+		print(i, end=" ", file=rendiconto)
+	i += 1
+print('\n\n')
+print(file=rendiconto)
+
+print("Zone			", end="")
+print("Zone			", end="", file=rendiconto)
+#punt_zone = len(zones.keys())
+punt_zone = contazone
+print(punt_zone)
+print(punt_zone, file=rendiconto)
+
 
 # siccome ARI Roma l'abbiamo considerata come un country, bisogna togliere 1 dal conteggio, se collegata
 print("Countries		", end="")
@@ -574,15 +608,6 @@ else:
 	punt_ctry = len(countries.keys())
 print(punt_ctry)
 print(punt_ctry, file=rendiconto)
-
-
-print("Zone			", end="")
-print("Zone			", end="", file=rendiconto)
-
-punt_zone = len(zones.keys())
-print(punt_zone)
-print(punt_zone, file=rendiconto)
-
 
 if "ARI Roma" in countries:
 	punt_iq0rm = 3
@@ -600,28 +625,5 @@ print(punt_iq0rm, file=rendiconto)
 print("-------------------------------", file=rendiconto)
 print("Totale			", end="", file=rendiconto)
 print(punt_ctry + punt_zone + punt_iq0rm, file=rendiconto)
-
-print("\n\n\n========== Zone collegate ==========")
-print("\n\n\n========== Zone collegate ==========", file=rendiconto)
-
-for i in range (1,41):
-	if str(i) in zones:
-		print(i, end=" ")
-		print(i, end=" ", file=rendiconto)
-	i += 1
-print()
-print(file=rendiconto)
-
-print("\n\n\n========== Zone non collegate ==========")
-print("\n\n\n========== Zone non collegate ==========", file=rendiconto)
-
-
-for i in range (1,41):
-	if str(i) not in zones:
-		print(i, end=" ")
-		print(i, end=" ", file=rendiconto)
-	i += 1
-print()
-print(file=rendiconto)
 
 rendiconto.close()
