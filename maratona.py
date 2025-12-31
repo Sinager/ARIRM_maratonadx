@@ -846,7 +846,7 @@ def checkapp(nomefile):
 logfile = checkapp(logoriginale)
 dxccnr = ''
 
-with open(logfile) as file:
+with open(logfile,encoding="utf-8", errors="ignore") as file:
 	rendiconto = open('calcolo-maratona.csv', 'w')
 	for line in file:
 		line = line.upper()			
