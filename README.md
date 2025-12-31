@@ -11,8 +11,11 @@ Piccolo script per analizzare un log .ADIF  ed estrarre gli elementi utili alla 
 sotto Windows potrebbe funzionare con
  py maratona.py [nome del log]
 
-5- il software stampa a schermo i risultati ed eventuali avvisi
+5- il software stampa a schermo le decisioni relative a ogni singolo QSO, i risultati ed eventuali avvisi.
+   Se volete salvare questo output in un file da leggere con calma, eseguire ridirigendo l'output. 
+   Esempio: salvo nel file pippo.txt
+   python maratona.py [nome del log] > [pippo.txt]
 
-6- viene generato un rapportino nel file "calcolo-maratona.txt"
+6- viene generato un rapportino nel file "calcolo-maratona.csv" che può essere poi copiato e incollato nel file Excel ufficiale
 
-Testato con .adi generati da QLog, BBLOGGER, QARTest (a seconda del contest non include la zona CQ)
+Testato con .adi generati da QLog, BBLOGGER, QARTest (a seconda del contest non include la zona CQ) e QRZLog
