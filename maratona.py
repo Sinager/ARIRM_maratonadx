@@ -467,6 +467,7 @@ dxcc_cq_zones = {
     29: [33],              # Canary Islands
     31: [8],               # Bahamas
     32: [33],              # Ceuta & Melilla
+    34: [32],					# CHATHAM IS.
     35: [29], 				# CHRISTMAS I.
     37: [8],               # Dominican Republic
     38: [29],				# COCOS (KEELING) IS.
@@ -475,13 +476,15 @@ dxcc_cq_zones = {
     43: [8],               # Puerto Rico
     45: [20],          		# DODECANESE
     46: [28],				# EAST MALAYSIA
+    47: [12],					# EASTER I.
     48: [31],				# EAST KIRIBATI
     49: [36],				# EQUATORIAL GUINEA
     50: [6],               # Mexico
     52: [17],              # Tajikistan
     53: [37],              # ETHIOPIA
     54: [16],              # European Russia
-    56: [11],					# FERNANDO DE NORONHA
+    56: [11],				# FERNANDO DE NORONHA
+    60: [8],					# BAHAMAS
     61: [8],               # British Virgin Islands
     62: [31],              # Nauru
     63: [9],               # FRENCH GUYANA
@@ -560,6 +563,7 @@ dxcc_cq_zones = {
     160: [32],             # Tonga
     162: [32],				# NEW CALEDONIA
     163: [15],             # Kaliningrad (UA2)
+    165: [39],				# MAURITIUS
     166: [27],             # MARIANA IS.
     167: [28],             # Cocos (Keeling) Islands
     168: [22],             # Sri Lanka
@@ -637,6 +641,7 @@ dxcc_cq_zones = {
     257: [15],             # Malta
     259: [40],             # Svalbard
     260: [14],				# MONACO
+    262: [17],				# TAJIKISTAN
     263: [14],             # Netherlands
     265: [14],             # Wales
     266: [14],             # Norway
@@ -650,6 +655,7 @@ dxcc_cq_zones = {
     278: [15],             # San Marino
     279: [14],             # Scotland
     281: [14],             # Spain
+    283: [20],				# UK SOVEREIGN BASE AREAS ON CYPRUS
     284: [14],             # Sweden
     285: [8],             # VIRGIN IS.
     286: [37],             # Uganda
@@ -657,6 +663,8 @@ dxcc_cq_zones = {
     288: [16],             # UKRAINE
     289: [5],              # United Nations HQ (4U1UN)
     291: [3, 4, 5],        # USA
+    292: [17],				# UZBEKISTAN
+    293: [26],				# VIET NAM
     294: [14],             # WALES
     295: [15],             # Slovak Republic
     296: [15],             # Serbia
@@ -703,6 +711,7 @@ dxcc_cq_zones = {
     402: [38],             # Botswana
     404: [36],             # Burundi
     406: [36],             # Cameroon
+    408: [35],				# CENTRAL AFRICA
     409: [35],             # Cape Verde
     410: [36],				# CHAD
     411: [39],				# COMOROS
@@ -723,6 +732,7 @@ dxcc_cq_zones = {
     444: [35],             # Mauritania
     446: [33],             # Morocco
     450: [35],             # Nigeria
+    452: [38],				# ZIMBABWE
     453: [39],				# REUNION I.
     454: [36],             # Rwanda
     456: [35],             # Senegal
@@ -848,7 +858,7 @@ with open(logfile) as file:
 				dxccnr = campo('<DXCC:',entry)
 				if nominativo == "IQ0RM":
 					dxccnr = 999
-				if dxccnr == 81:
+				if int(dxccnr) == 81:
 					dxccnr = 230
 				print('	> DXCC # ',end='')
 				print(dxccnr, end=' - ')
