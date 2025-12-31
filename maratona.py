@@ -848,6 +848,8 @@ with open(logfile) as file:
 				dxccnr = campo('<DXCC:',entry)
 				if nominativo == "IQ0RM":
 					dxccnr = 999
+				if dxccnr == 81:
+					dxccnr = 230
 				print('	> DXCC # ',end='')
 				print(dxccnr, end=' - ')
 				if (dxccnr == 'n/a') or (dxccnr == ''):
