@@ -9,6 +9,9 @@
 # country e zone sono dizionari che portano come primo elemento country o zona e come secondo elemento l'ordinale di lista del QSO
 
 # elementi necessari: country, zona, modo, nominativo, timestamp
+# v 0.11 31 Dic 2025 - crea il file "calcolo-maratona.csv" in modo da poter essere incollato sul formato Excel ufficiale
+# v 0.10 30 Dic 2025 - implementato sistema di controllo sulle zone dichiarate
+# v 0.9 28 Dic 2025 - corretto errore su indicazione "nuova zona" - tnx IU0PXQ per la segnalazione
 # v 0.8 28 Dic 2025 - corretto errore conteggio zone - tnx IU0QME per la segnalazione
 # v 0.7 28 Dic 2025 - aggiunto supporto per log generati da QRZLogbook
 # v 0.6 15 Mar 2025 - corretto errore nel conteggio / elenco delle zone
@@ -20,6 +23,7 @@
 
 
 import sys
+import os
 
 logfile = ''
 qualificanti = []
@@ -431,7 +435,355 @@ dxcc = {
 	519:'SABA & ST. EUSTATIUS',
 	520:'BONAIRE',
 	521:'SOUTH SUDAN (REPUBLIC OF)',
-	522:'REPUBLIC OF KOSOVO'
+	522:'REPUBLIC OF KOSOVO',
+	999:'ARI ROMA'
+}
+
+# Dizionario DXCC <> ZONE
+# POSSONO ESSERCI ANCORA ERRORI PERCHE' PARZIALMENTE COMPILATA DA AI GOOGLE GEMINI CHE HA FATTO UN PESSIMO LAVORO
+dxcc_cq_zones = {
+    1: [1, 2, 3, 4, 5],  # Canada
+    2: [5],               # St. Paul Island
+    3: [15],              # Monaco
+    4: [39],              # Mauritius
+    5: [33],              # Algeria
+    6: [1],               # Alaska
+    7: [15],              # Albania
+    10: [23, 24],         # China
+    11: [26],              # Andaman & Nicobar Islands
+    12: [8],              # ANGUILLA
+    13: [12, 13, 29, 30, 32, 38, 39],              # ANTARCTICA
+    14: [15],				# CZECH REP.
+    15: [16,17,18,19],      # ASIATIC RUSSIA
+    16: [32],				# NEW ZEALAND SUBANTARCTIC ISLANDS
+    17: [9],				# AVES IS.
+    18: [21],				# AZERBAIJAN
+    20: [31],              # BAKER & HOWLAND IS.
+    21: [14],              # Balearic Islands
+    22: [27],					# PALAU
+    23: [0],					# BLENHEIM REEF deleted
+    24: [33],              # Madeira Islands
+    27: [16],              # BELARUS
+    29: [33],              # Canary Islands
+    31: [8],               # Bahamas
+    32: [33],              # Ceuta & Melilla
+    35: [29], 				# CHRISTMAS I.
+    37: [8],               # Dominican Republic
+    38: [29],				# COCOS (KEELING) IS.
+    40: [40],              # Iceland
+    42: [25],              # South Korea
+    43: [8],               # Puerto Rico
+    45: [20],          		# DODECANESE
+    46: [28],				# EAST MALAYSIA
+    48: [31],				# EAST KIRIBATI
+    49: [36],				# EQUATORIAL GUINEA
+    50: [6],               # Mexico
+    52: [17],              # Tajikistan
+    53: [37],              # ETHIOPIA
+    54: [16],              # European Russia
+    56: [11],					# FERNANDO DE NORONHA
+    61: [8],               # British Virgin Islands
+    62: [31],              # Nauru
+    63: [9],               # FRENCH GUYANA
+    64: [8],               # Montserrat
+    65: [8],               # Anguilla
+    66: [33],              # Western Sahara
+    69: [8],              # CAYMAN IS.
+    70: [8],               # Cuba
+    71: [10],               # GALAPAGOS
+    72: [8],              # DOMINICAN REPUBLIC
+    74: [14],              # Faroe Islands
+    75: [21],              # Georgia
+    76: [7],               # Guatemala
+    77: [8],               # Grenada
+    78: [8],               # Haiti
+    79: [8],               # Guadeloupe
+    80: [7],               # Nicaragua
+    82: [8],               # Jamaica
+    84: [8],               # St. Kitts & Nevis
+    86: [8],               # St. Lucia
+    88: [7],               # PANAMA
+    89: [8],               # TURKS & CAICOS IS.
+    90: [10],               # TRINIDAD & TOBAGO
+    91: [8],               # Turks & Caicos Islands
+    94: [8],               # Antigua & Barbuda
+    95: [8],               # Barbados
+    96: [8],               # Dominica
+    97: [8],				# ST. LUCIA
+    98: [8],					# ST. VINCENT
+    100: [13],             # Argentina
+    103: [27],             # Guam
+    104: [31],             # Baker & Howland Islands
+    105: [8],              # Guantanamo Bay
+    106: [14],              # GUERNSEY
+    107: [35],             # Guinea
+    108: [11],             # Brazil
+    109: [35],				# Guinea-Bissau
+    110: [31],             # Kure Island
+    112: [12],             # Chile
+    114: [14],             # ISLE OF MAN
+    116: [9],              # Colombia
+    117: [14],             # ITU HQ (4U1ITU)
+    118: [40],             # Jan Mayen
+    120: [10],             # Ecuador (HC8)
+    122: [14],				# JERSEY
+    123: [31],             # Johnston Island
+    125: [12],             # Juan Fernandez Islands
+    126: [31],             # Western Kiribati (T30)
+    129: [9],              # Guyana
+    130: [17],             # Kazakhstan
+    132: [11],             # Paraguay
+    134: [31],             # Kingman Reef
+    135: [17],             # KYRGYZSTAN
+    136: [9],              # PERU
+    137: [25],				# REPUBLIC OF KOREA
+    138: [31],             # Midway Island
+    140: [9],				# SURINAME
+    141: [14],             # France
+    142: [22],             # Lakshadweep Islands
+    143: [26],				# LAOS
+    144: [13],             # Uruguay
+    145: [15],             # LATVIA
+    146: [16],             # LITHUANIA
+    147: [15],             # Vatican City
+    148: [9],              # Venezuela
+    149: [14],             # AZORES
+    150: [29, 30],         # Australia
+    151: [30],             # Lord Howe Island
+    152: [30],             # Mellish Reef
+    153: [32],             # Norfolk Island
+    154: [30],             # Willis Island
+    155: [28],             # Christmas Island (VK9X)
+    157: [17, 18, 19],     # Asiatic Russia
+    158: [31],             # Eastern Kiribati (T32)
+    159: [22],             # Maldives
+    160: [32],             # Tonga
+    162: [32],				# NEW CALEDONIA
+    163: [15],             # Kaliningrad (UA2)
+    166: [27],             # MARIANA IS.
+    167: [28],             # Cocos (Keeling) Islands
+    168: [22],             # Sri Lanka
+    169: [39],             # MAYOTTE
+    170: [32],             # New Zealand
+    171: [32],             # Kermadec Islands
+    172: [32],             # Chatham Islands
+    173: [27],             # MICRONESIA
+    175: [28],             # Indonesia
+    176: [32],             # Fiji
+    177: [27],             # Minami Torishima
+    179: [16],             # MOLDOVA
+    180: [32],             # Tokelau Islands
+    181: [37],             # Mozambique
+    182: [32],             # American Samoa
+    185: [39],             # Reunion Island
+    187: [35],             # Niger
+    188: [32],				# NIUE
+    189: [32],				# NORFOLK I.
+    190: [32],             # Samoa
+    191: [32],             # North Cook Islands
+    192: [27],             # Ogasawara
+    195: [36],             # Annobon Island
+    197: [31],             # Palmyra & Jarvis Islands
+    199: [21],             # Azerbaijan
+    200: [0],				# PORTUGUESE TIMOR --- deleted
+    201: [15],             # Albania
+    202: [8],              # Puerto Rico
+    203: [14],             # Andorra
+    204: [31],             # Wake Island
+    205: [28],             # Solomon Islands
+    206: [15],             # AUSTRIA
+    207: [39],             # Rodriguez Island
+    208: [0],                # RUANDA URUNDI
+    209: [14],             # Spain
+    211: [32],             # Wallis & Futuna Islands
+    212: [20],             # Bulgaria
+    213: [8],             	# ST MARTIN
+    214: [15],             # CORSICA
+    215: [20],             # Cyprus
+    216: [11],             # SAN ANDRES & PROVIDENCIA
+    217: [12],             # San Felix & San Ambrosio
+    218: [7],              # Belize
+    219: [8],              # Cayman Islands
+    221: [14],             # Denmark
+    222: [31],             # Marquesas Islands
+    223: [14],             # England
+    224: [15],             # FINLAND
+    225: [15],             # Sardinia
+    226: [27],             # Micronesia
+    227: [14],             # France
+    228: [27],             # Palau
+    229: [32],             # Austral Islands
+    230: [14],             # Federal Republic of Germany
+    232: [37],              # SOMALIA
+    233: [14],				# GIBRALTAR
+    234: [32],				# SOUTH COOK IS.
+    235: [32],             # French Polynesia
+    236: [20],             # GREECE
+    237: [27],             # Mariana Islands
+    239: [15],             # Hungary
+    240: [13],				# SOUTH SANDWICH IS.
+    242: [39],             # Tromelin Island
+    243: [39],             # Crozet Island
+    245: [14],             # Ireland
+    247: [15],             # S.M.O.M. (1A0)
+    248: [15, 33],         # Italy
+    249: [8],             	# ST. KITTS & NEVIS
+    250: [36],             # ST. HELENA
+    251: [14],             # Isle of Man
+    252: [14],             # Jersey
+    253: [14],             # Guernsey
+    254: [14],             # Luxembourg
+    256: [33],          	# Madeira Islands
+    257: [15],             # Malta
+    259: [40],             # Svalbard
+    260: [14],				# MONACO
+    263: [14],             # Netherlands
+    265: [14],             # Wales
+    266: [14],             # Norway
+    269: [15],             # POLAND
+    270: [14],             # Belgium
+    272: [14],             # Portugal
+    273: [11],				# TRINDADE & MARTIM VAZ IS.
+    274: [38],				# TRISTAN DA CUNHA & GOUGH I.
+    275: [20],             # Romania
+    277: [5],			 	# ST. PIERRE & MIQUELON
+    278: [15],             # San Marino
+    279: [14],             # Scotland
+    281: [14],             # Spain
+    284: [14],             # Sweden
+    285: [8],             # VIRGIN IS.
+    286: [37],             # Uganda
+    287: [14],             # Switzerland
+    288: [16],             # UKRAINE
+    289: [5],              # United Nations HQ (4U1UN)
+    291: [3, 4, 5],        # USA
+    294: [14],             # WALES
+    295: [15],             # Slovak Republic
+    296: [15],             # Serbia
+    297: [31],				# WAKE IS.
+    298: [32],				# WALLIS & FUTUNA IS.
+    299: [28],              # WEST MALAYSIA
+    301: [31],				# W. KIRIBATI (GILBERT IS. )
+    302: [33, 34, 37],				# WESTERN SAHARA
+    304: [21],             # Bahrain
+    305: [22],				# BANGLADESH
+    306: [22],             # Bhutan
+    308: [7], 				# COSTA RICA
+    312: [24],             # Taiwan
+    315: [22],             # Sri Lanka
+    318: [23, 24],         # China
+    321: [24],				# HONG KONG
+    324: [22],             # India
+    327: [28],             # Indonesia
+    330: [21],				# IRAN
+    333: [21],             # Iraq
+    336: [20],             # Israel
+    339: [25],             # Japan
+    342: [20],             # Jordan
+    345: [28],				#  	BRUNEI DARUSSALAM
+    348: [21],             # Kuwait
+    351: [20],             # Lebanon
+    354: [20],             # LEBANON
+    363: [23],             # Mongolia
+    369: [22],             # Nepal
+    370: [21],             # Oman
+    372: [21],             # Pakistan
+    375: [27],             # Philippines
+    376: [21],             # Qatar
+    378: [21],             # Saudi Arabia
+    379: [39],				# SEYCHELLES
+    381: [28],             # Singapore
+    384: [20],             # Syria
+    386: [24],              # Taiwan (Alt)
+    387: [26],              # Thailand
+    390: [20],             # Turkey
+    391: [21],             # United Arab Emirates
+    400: [33],				# ALGERIA
+    401: [36],             # Angola
+    402: [38],             # Botswana
+    404: [36],             # Burundi
+    406: [36],             # Cameroon
+    409: [35],             # Cape Verde
+    410: [36],				# CHAD
+    411: [39],				# COMOROS
+    412: [36],             # Central African Republic
+    414: [36],             # Dem. Rep. of the Congo
+    416: [35],             # BENIN
+    420: [36],             # Gabon
+    422: [35],             # Gambia
+    424: [35],             # Ghana
+    428: [35],             # Ivory Coast
+    430: [37],             # Kenya
+    432: [38],             # Lesotho
+    434: [35],             # Liberia
+    436: [34],             # Libya
+    438: [39],             # Madagascar
+    440: [37],             # Malawi
+    442: [35],             # Mali
+    444: [35],             # Mauritania
+    446: [33],             # Morocco
+    450: [35],             # Nigeria
+    453: [39],				# REUNION I.
+    454: [36],             # Rwanda
+    456: [35],             # Senegal
+    457: [39],             # Seychelles
+    458: [35],             # Sierra Leone
+    460: [32],             # Rotuma Island
+    462: [38],             # South Africa
+    464: [38],             # Namibia
+    466: [34],             # Sudan
+    468: [33],             # Tunisia
+    470: [37],             # Tanzania
+    472: [35],             # Togo
+    474: [33],             # TUNISIA
+    478: [34],             # EGYPT
+    480: [38],             # Zimbabwe
+    482: [36], 				# ZAMBIA
+    483: [35],				# TOGO
+    489: [32],             # Conway Reef
+    490: [31],             # Banaba Island
+    492: [21],             # Yemen
+    497: [15],             # Croatia
+    499: [15],             # Slovenia
+    501: [15],             # Bosnia-Herzegovina
+    502: [15],             # North Macedonia
+    503: [15], 				# CZECH REPUBLIC
+    504: [15],             # SLOVAK REPUBLIC
+    505: [24],             # Pratas Island
+    506: [27],             # Scarborough Reef
+    507: [32],             # TEMOTU PROVINCE
+    508: [32],             # AUSTRAL I.
+    509: [31],             # MARQUESAS IS.
+    510: [20],             # Palestine
+    511: [28],             # Timor-Leste
+    512: [30],             # Chesterfield Islands
+    513: [32],             # Ducie Island
+    514: [15],             # Montenegro
+    516: [8],				# SAINT BARTHELEMY
+    517: [9],             # CURACAO
+    518: [8],              # SINT MAARTEN
+    519: [9],              # SABA & ST. EUSTATIUS
+    520: [9],              # BONAIRE
+    521: [34],              # SOUTH SUDAN (REPUBLIC OF)
+    522: [15],             # REPUBLIC OF KOSOVO
+    999: [15]				# ARI ROMA
+}
+
+# lista entità nell'ordine dell'Excel Maratona
+maratona_ctry = [999,246,247,260,4,165,207,49,195,176,489,460,468,474,293,107,24,199,18,75,514,315,117,289,511,336,436,215,470,450,438,444,187,483,190,286,430,456,82,492,432,440,400,62,159,129,497,424,257,482,348,458,299,46,369,414,404,381,454,90,402,160,370,306,391,376,304,372,318,506,386,505,157,203,422,60,181,112,217,47,125,13,446,70,104,272,256,149,144,211,252,401,409,411,230,375,51,510,191,234,188,501,281,21,29,32,245,14,434,330,179,52,53,27,135,262,280,227,79,169,516,162,512,84,508,36,175,509,277,453,99,124,276,213,41,131,10,298,63,223,114,265,122,279,106,294,185,507,239,287,251,120,71,78,72,116,161,216,137,88,80,387,295,378,248,225,382,77,109,97,95,98,339,177,192,363,259,118,342,291,105,166,20,103,123,174,197,110,138,9,515,297,6,182,285,202,43,266,100,254,146,212,136,354,206,224,5,167,503,504,209,221,237,222,163,91,344,263,517,520,519,518,108,56,253,273,140,61,302,305,499,379,219,284,269,466,478,236,180,45,40,282,301,31,48,490,232,278,22,390,242,76,308,37,406,214,408,412,420,410,428,416,442,54,126,15,292,130,288,94,66,249,464,173,168,345,1,150,111,153,38,147,171,189,303,35,12,96,65,89,172,513,141,235,238,240,241,64,33,321,324,11,142,50,204,480,312,143,152,309,3,327,333,158,384,145,86,275,74,296,148,17,452,502,522,521,7,233,283,250,205,274,69,270,170,34,133,16,132,462,201]
+
+bandemhz = {
+	'160M': 1.8,
+	'80M':	3.5,
+	'60M':	5,
+	'40M':	7,
+	'30M':	10,
+	'20M':	14,
+	'17M':	18,
+	'15M':	21,
+	'12M':	24,
+	'10M':	28,
+	'6M':	50
 }
 
 def conv_qlog(nomefile):
@@ -454,7 +806,6 @@ def conv_qlog(nomefile):
 	return(fileout)
 
 
-
 def campo(nome,riga): 
 	field_start = riga.find(nome)
 	if field_start == -1:
@@ -464,7 +815,7 @@ def campo(nome,riga):
 		field_end = riga.find('<',field_start)
 		return(riga[field_start +1:field_end:])
 
-print("========== QSO conteggiati ==========")
+print("========== QSO valutati ==========")
 
 logoriginale = sys.argv[1]
 
@@ -483,136 +834,113 @@ def checkapp(nomefile):
 	return(logfile)
 
 logfile = checkapp(logoriginale)
+dxccnr = ''
 
 with open(logfile) as file:
-	rendiconto = open('calcolo-maratona.txt', 'w')
-	for line in file:			
-		havectry = 0 # controllo se abbiamo un country valido
-		subline = line.split('<EOR>')
+	rendiconto = open('calcolo-maratona.csv', 'w')
+	for line in file:
+		line = line.upper()			
+		subline = line.split('EOR>')
 		for entry in subline:
 			if len(entry) > 72:
 				nominativo = campo('<CALL:',entry)
-				country = campo('<COUNTRY:',entry)
-				if country == 'n/a':
-					dxccnr = campo('<DXCC:',entry)
-					if dxccnr == 'n/a':
-						break
-					else:
-						country = dxcc[int(dxccnr)]
-						havectry = 1
+				print(nominativo,end='')
+				dxccnr = campo('<DXCC:',entry)
+				if nominativo == "IQ0RM":
+					dxccnr = 999
+				print('	> DXCC # ',end='')
+				print(dxccnr, end=' - ')
+				if (dxccnr == 'n/a') or (dxccnr == ''):
+					country = campo('<COUNTRY:',entry)
+					dxccnr = list(dxcc.keys())[list(dxcc.values()).index(country)]
 				else:
-					havectry = 1
-			
-				if havectry == 0:
-					break
-				
+					country = dxcc[int(dxccnr)]
+
 				modo = campo('<MODE:',entry)
 				if modo in digitali:
 					modo = "digi"
-				if (modo == "SSB") or (modo == "CW"):
+				if modo in ["SSB","LSB","USB","CW"]:
 					modo = "SSB/CW"
 				banda = campo('<BAND:',entry)
+				if banda not in bandemhz.keys():
+					print(banda,end=' ')
+					print(' Banda non valida per la maratona - QSO scartato')
+					break
 			
 				data = campo('<QSO_DATE:',entry)
 				ora = campo('<TIME_ON:',entry)
 				zonacq = campo('<CQZ:',entry)
-				if zonacq == 'n/a':
-					print("==== il record non contiene zona CQ ===")
-			
-				if nominativo == "IQ0RM":
-					country = "ARI Roma"
-					qso = nominativo + "," + country + "," + modo + "," + banda + "," + data + "," + ora + "," + zonacq +  ",3"
-				else:
-					qso = nominativo + "," + country + "," + modo + "," + banda + "," + data + "," + ora + "," + zonacq +  ",1"
-
+				
+				if (zonacq == 'n/a') or (zonacq == ''):
+					print('----- Manca zona CQ - inserisco la prima della lista per il country >',end='')
+					zonacq = str(dxcc_cq_zones[int(dxccnr)][0])
+					print(zonacq,end=' ')
+				else:					
+					dxcc_cq_zones[int(dxccnr)]
+					# verifica se la zona a log corrisponde a quelle ufficiali
+					if int(zonacq) not in dxcc_cq_zones[int(dxccnr)]:
+						print(' ----- mancata corrispondenza')
+						print('	Risulta zona CQ ',end='')
+						print(zonacq,end=' vs. ')
+						print(dxcc_cq_zones[int(dxccnr)])
+						print('	sostuituisco con la prima della lista > ',end='')
+						zonacq = str(dxcc_cq_zones[int(dxccnr)][0])
+				print('Zona CQ ',end='')
+				zonacq = zonacq.strip()
+				print(zonacq,end='')
+				
+				qso = "['" + data.strip() + "','" + ora.strip() + "','" + banda.strip() + "','" + modo.strip() + "','" + nominativo.strip() + "','" + zonacq + "']"
+				
+				#print('---QSO da processare---')
+				#print(qso,end=' ')
+				ctryadd = (int(dxccnr),qso)
+				zoneadd = (int(zonacq),qso)
 
 				# se il country non è ancora nella matrice
-				if country not in countries:
+				if int(dxccnr) not in countries.keys():
 					#	lo aggiungiamo alla lista dei qualificanti
-					qualificanti.append(qso)
-					qsoindex = len(qualificanti)
-					#	lo aggiungiamo alla lista countries
-					countries[country] = qsoindex
-					print(qsoindex, end="")
-					print(" - ", end="")
-					print(qso, end="")
-					print(" -- nuovo country")
-
-					print(qsoindex, end="", file=rendiconto)
-					print(" - ", end="", file=rendiconto)
-					print(qso, end="", file=rendiconto)
-					print(" -- nuovo country", file=rendiconto)
-
-
+					countries.update({ctryadd})
+					print(",manca country")
+	
 				# altrimenti vediamo se ci serve per la zona
-				elif zonacq not in zones and zonacq != 'n/a':
+				elif int(zonacq) not in zones.keys():
 					#	lo aggiungiamo alla lista dei qualificanti
-					qualificanti.append(qso)
-					qsoindex = len(qualificanti)
-					#	lo aggiungiamo alla lista zone
-					zones[zonacq] = qsoindex
-					print(qsoindex, end="", file=rendiconto)
-					print(" - ", end="", file=rendiconto)
-					print(qso, end="", file=rendiconto)
-					print(" -- nuova zona", file=rendiconto)
+					zones.update({zoneadd})
+					print(",manca zona")
+				
+				else:
+					print(',celo')
 
-					print(qsoindex, end="")
-					print(" - ", end="")
-					print(qso, end="")
-					print(" -- nuova zona")
-
-
+# riepilogo a schermo
 print("\n\n\n========== RIEPILOGO ==========")
-print("\n\n\n========== RIEPILOGO ==========", file=rendiconto)
+print("\n========== Zone collegate ==========")
 
-print("\n\n\n========== Zone collegate ==========")
-print("\n\n\n========== Zone collegate ==========", file=rendiconto)
-
-contazone = 0
-for i in range (1,41):
-	if str(i) in zones:
-		print(i, end=" ")
-		print(i, end=" ", file=rendiconto)
-		contazone += 1
-	i += 1
-print()
-print(file=rendiconto)
+contazone = list(zones.keys())
+print(contazone)
 
 print("\n========== Zone non collegate ==========")
-print("\n========== Zone non collegate ==========", file=rendiconto)
 
 for i in range (1,41):
-	if str(i) not in zones:
+	if i not in contazone:
 		print(i, end=" ")
-		print(i, end=" ", file=rendiconto)
 	i += 1
-print('\n\n')
-print(file=rendiconto)
+print('\n')
 
-print("Zone			", end="")
-print("Zone			", end="", file=rendiconto)
-#punt_zone = len(zones.keys())
-punt_zone = contazone
+print("\nZone			", end="")
+punt_zone = len(zones.keys())
 print(punt_zone)
-print(punt_zone, file=rendiconto)
-
 
 # siccome ARI Roma l'abbiamo considerata come un country, bisogna togliere 1 dal conteggio, se collegata
 print("Countries		", end="")
-print("Countries		", end="", file=rendiconto)
 
+punt_ctry = len(countries.keys())
+punt_iq0rm = 0
 
-if "ARI Roma" in countries:
-	punt_ctry = len(countries.keys())-1
-else:
-	punt_ctry = len(countries.keys())
-print(punt_ctry)
-print(punt_ctry, file=rendiconto)
-
-if "ARI Roma" in countries:
+if 999 in list(countries.keys()):
+	punt_ctry = punt_ctry -1
 	punt_iq0rm = 3
-else:
-	punt_iq0rm = 0
+	
+print(punt_ctry)
 
 print("IQ0RM			", end="")
 print(punt_iq0rm)
@@ -620,10 +948,46 @@ print("-------------------------------")
 print("Totale			", end="")
 print(punt_ctry + punt_zone + punt_iq0rm)
 
-print("IQ0RM			", end="", file=rendiconto)
-print(punt_iq0rm, file=rendiconto)
-print("-------------------------------", file=rendiconto)
-print("Totale			", end="", file=rendiconto)
-print(punt_ctry + punt_zone + punt_iq0rm, file=rendiconto)
+# FILE CSV PER POPOLARE EXCEL MARATONA
+#print("\n\n\n========== RIEPILOGO ==========", file=rendiconto)
+
+print("Country,Giorno,Mese,GMT,Frequency,Mode,Callsign", file=rendiconto)
+
+# countries
+
+for entity in maratona_ctry:
+	print(dxcc[entity],end=',', file=rendiconto)
+	if entity in countries.keys():
+		subqso = countries[entity].replace("'","").split(',')
+		print(countries[entity][8:10],end=',', file=rendiconto)
+		print(countries[entity][6:8],end=',', file=rendiconto)
+		print(countries[entity][13:15],end='.', file=rendiconto)
+		print(countries[entity][15:17],end=',', file=rendiconto)
+		print(bandemhz[subqso[2]],end=',', file=rendiconto)
+		print(subqso[3],end=',', file=rendiconto)
+		print(subqso[4], file=rendiconto)
+	else:
+		print(',,,,,', file=rendiconto)
+
+# zone
+for i in range (1,41):
+	print(i, end=",", file=rendiconto)
+	if i in contazone:
+		subqso = zones[i].replace("'","").split(',')
+		print(zones[i][8:10],end=',', file=rendiconto)
+		print(zones[i][6:8],end=',', file=rendiconto)
+		print(zones[i][13:15],end='.', file=rendiconto)
+		print(zones[i][15:17],end=',', file=rendiconto)
+		print(bandemhz[subqso[2]],end=',', file=rendiconto)
+		print(subqso[3],end=',', file=rendiconto)
+		print(subqso[4], file=rendiconto)
+	else:
+		print(',,,,,', file=rendiconto)
+
+	i += 1
+print('\n')
+
+
 
 rendiconto.close()
+#os.remove(logfile)
