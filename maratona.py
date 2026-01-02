@@ -9,6 +9,7 @@
 # country e zone sono dizionari che portano come primo elemento country o zona e come secondo elemento l'ordinale di lista del QSO
 
 # elementi necessari: country, zona, modo, nominativo, timestamp
+# v 0.12 02 Gen 2026 - corretta zona per Creta tnx IU0DHV - aggiunta verifica sulle date
 # v 0.11 31 Dic 2025 - crea il file "calcolo-maratona.csv" in modo da poter essere incollato sul formato Excel ufficiale
 # v 0.10 30 Dic 2025 - implementato sistema di controllo sulle zone dichiarate
 # v 0.9 28 Dic 2025 - corretto errore su indicazione "nuova zona" - tnx IU0PXQ per la segnalazione
@@ -471,7 +472,7 @@ dxcc_cq_zones = {
     35: [29], 				# CHRISTMAS I.
     37: [8],               # Dominican Republic
     38: [29],				# COCOS (KEELING) IS.
-    40: [40],              # Iceland
+    40: [20],              # CRETE IS.
     42: [25],              # South Korea
     43: [8],               # Puerto Rico
     45: [20],          		# DODECANESE
@@ -880,6 +881,11 @@ with open(logfile,encoding="utf-8", errors="ignore") as file:
 					break
 			
 				data = campo('<QSO_DATE:',entry)
+				if (int(data) < 20250101) or (int(data) > 20251231):
+					print('	QSO in data non valida',end="")
+					print(data)
+					break
+						
 				ora = campo('<TIME_ON:',entry)
 				zonacq = campo('<CQZ:',entry)
 				
